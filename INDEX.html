@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regulación de los Potenciales de Membrana — Guía Interactiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a1420;
+    --bg-panel:#0f1e2e;
+    --bg-panel-2:#12253a;
+    --grid: rgba(79,209,197,0.09);
+    --line: rgba(220,232,240,0.10);
+    --text:#dce8f0;
+    --text-dim:#7a93a8;
+    --text-dimmer:#4f6579;
+    --na:#f2a65a;
+    --na-dim: rgba(242,166,90,0.15);
+    --k:#4fd1c5;
+    --k-dim: rgba(79,209,197,0.15);
+    --ca:#e85d9c;
+    --ca-dim: rgba(232,93,156,0.15);
+    --cl:#8bd17c;
+    --cl-dim: rgba(139,209,124,0.15);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(79,209,197,0.06), transparent 60%),
+      radial-gradient(1000px 500px at 90% 10%, rgba(242,166,90,0.05), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{ font-family:'Space Grotesk',sans-serif; margin:0; letter-spacing:-0.01em;}
+  .mono{ font-family:'JetBrains Mono',monospace; }
+  a{color:inherit;}
+
+  /* ---------- Nav ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; gap:6px; align-items:center;
+    padding:10px 18px;
+    background:rgba(10,20,32,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  nav::-webkit-scrollbar{display:none;}
+  nav .brand{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px; color:var(--k);
+    padding-right:14px; margin-right:8px;
+    border-right:1px solid var(--line);
+    white-space:nowrap;
+  }
+  nav a.pill{
+    white-space:nowrap;
+    font-size:12.5px;
+    color:var(--text-dim);
+    text-decoration:none;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid transparent;
+    transition:.15s;
+  }
+  nav a.pill:hover{ color:var(--text); border-color:var(--line); background:var(--bg-panel);}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:70px 24px 50px;
+    max-width:980px; margin:0 auto;
+    text-align:center;
+  }
+  .hero .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px; color:var(--k);
+    letter-spacing:.12em; text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .hero h1{
+    font-size:clamp(28px,5vw,46px);
+    font-weight:600;
+    line-height:1.15;
+    color:#fff;
+  }
+  .hero h1 span{color:var(--na);}
+  .hero p.sub{
+    color:var(--text-dim);
+    font-size:16px;
+    max-width:560px;
+    margin:16px auto 0;
+  }
+  .trace-wrap{
+    max-width:640px; margin:44px auto 0;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 18px 8px;
+  }
+  .trace-wrap .readout{
+    display:flex; justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; color:var(--text-dimmer);
+    padding:0 6px 6px;
+  }
+  #heroTrace{ display:block; width:100%; height:auto; }
+  #heroPath{
+    stroke:var(--na);
+    stroke-width:2.2;
+    fill:none;
+    stroke-dasharray:900;
+    stroke-dashoffset:900;
+    animation: draw 3s ease-out forwards, glow 3s ease-in-out .3s;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  @keyframes glow{ 50%{ filter: drop-shadow(0 0 6px var(--na)); } }
+
+  /* ---------- Sections ---------- */
+  section{
+    max-width:980px; margin:0 auto;
+    padding:64px 24px;
+    border-top:1px solid var(--line);
+  }
+  .kicker{
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:28px;
+  }
+  .kicker .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px; color:var(--bg);
+    background:var(--k);
+    width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .kicker h2{ font-size:23px; color:#fff; font-weight:600;}
+  .kicker p{ margin:2px 0 0; color:var(--text-dim); font-size:14px;}
+
+  .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media(max-width:720px){ .grid3,.grid2{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+  }
+  .card h3{ font-size:15px; color:#fff; margin-bottom:8px; }
+  .card p{ font-size:13.5px; color:var(--text-dim); margin:0;}
+  .card .tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--k); margin-bottom:10px; display:block;
+  }
+
+  /* ---------- Ion table ---------- */
+  .ion-row{ display:grid; grid-template-columns:110px 1fr 1fr; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);}
+  .ion-row:last-child{border-bottom:none;}
+  .ion-name{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700;}
+  .bar-track{ background:rgba(255,255,255,0.05); border-radius:6px; height:22px; position:relative; overflow:hidden;}
+  .bar-fill{ height:100%; border-radius:6px; display:flex; align-items:center; padding-left:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#0a1420; font-weight:700; white-space:nowrap;}
+  .ion-labels{ display:grid; grid-template-columns:110px 1fr 1fr; gap:10px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-dimmer); text-transform:uppercase; letter-spacing:.05em; padding-bottom:4px;}
+
+  /* ---------- AP explorer (signature) ---------- */
+  .ap-explorer{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+  }
+  .ap-graph-wrap{ position:relative; }
+  #apSvg{ width:100%; height:auto; display:block;}
+  #apPath{ stroke:var(--text-dimmer); stroke-width:2; fill:none; }
+  #apMarker{ fill:var(--na); filter:drop-shadow(0 0 5px var(--na)); }
+  .ap-controls{ margin-top:14px; }
+  input[type=range]{
+    width:100%; accent-color:var(--na);
+    background:transparent;
+  }
+  .ap-phase-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px; color:var(--k);
+    text-transform:uppercase; letter-spacing:.1em;
+    margin-top:14px;
+  }
+  .ap-phase-title{ font-size:19px; color:#fff; font-weight:600; margin-top:4px;}
+  .ap-phase-desc{ color:var(--text-dim); font-size:13.5px; margin-top:8px; max-width:560px;}
+  .voltage-readout{
+    font-family:'JetBrains Mono',monospace;
+    font-size:26px; color:var(--na);
+    margin-top:10px;
+  }
+  .channel-row{ display:flex; gap:14px; margin-top:18px; flex-wrap:wrap;}
+  .channel-chip{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 12px; border-radius:10px;
+    border:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace; font-size:12px;
+    transition:.2s;
+  }
+  .channel-dot{ width:10px; height:10px; border-radius:50%; }
+  .todo-nada{
+    margin-top:20px; padding:12px 14px;
+    border-left:3px solid var(--ca);
+    background:var(--ca-dim);
+    font-size:13px; color:var(--text);
+    border-radius:0 8px 8px 0;
+  }
+
+  /* ---------- Myelin race ---------- */
+  .race-track{
+    position:relative; height:70px;
+    background:linear-gradient(90deg, transparent 0%, transparent 100%);
+    border-bottom:1px dashed var(--line);
+    margin-bottom:26px;
+  }
+  .race-label{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dimmer); margin-bottom:6px;}
+  .race-dot{
+    position:absolute; top:22px; left:0;
+    width:14px; height:14px; border-radius:50%;
+    background:var(--na); box-shadow:0 0 8px var(--na);
+  }
+  .node{
+    position:absolute; top:30px; width:2px; height:10px;
+    background:var(--line);
+  }
+  button.run-btn{
+    font-family:'JetBrains Mono',monospace;
+    background:var(--na); color:#0a1420; border:none;
+    padding:10px 18px; border-radius:8px; font-size:13px;
+    cursor:pointer; font-weight:700;
+    transition:.15s;
+  }
+  button.run-btn:hover{ filter:brightness(1.1); }
+  .race-time{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--k); margin-left:14px;}
+
+  /* ---------- Synapse accordion ---------- */
+  .accordion-item{
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:10px;
+    overflow:hidden;
+    background:var(--bg-panel);
+  }
+  .accordion-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; cursor:pointer;
+  }
+  .accordion-head h4{ font-size:14.5px; color:#fff;}
+  .accordion-head .plus{ color:var(--k); font-family:'JetBrains Mono',monospace; transition:.2s; }
+  .accordion-body{
+    max-height:0; overflow:hidden; transition:max-height .3s ease;
+    padding:0 16px;
+  }
+  .accordion-item.open .accordion-body{ padding-bottom:14px; }
+  .accordion-item.open .plus{ transform:rotate(45deg); }
+  .accordion-body ol{ margin:0; padding-left:18px; color:var(--text-dim); font-size:13px;}
+  .accordion-body li{ margin-bottom:6px;}
+
+  /* ---------- Flip cards ---------- */
+  .flip-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  @media(max-width:720px){ .flip-grid{grid-template-columns:1fr;} }
+  .flip-card{ perspective:1000px; height:150px; cursor:pointer; }
+  .flip-inner{
+    position:relative; width:100%; height:100%;
+    transition:transform .5s; transform-style:preserve-3d;
+  }
+  .flip-card.flipped .flip-inner{ transform:rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:var(--radius); padding:18px;
+    display:flex; flex-direction:column; justify-content:center;
+    border:1px solid var(--line);
+  }
+  .flip-front{ background:var(--bg-panel); }
+  .flip-front .q{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--k); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px;}
+  .flip-front h3{ font-size:16px; color:#fff; font-weight:600;}
+  .flip-back{
+    background:var(--bg-panel-2);
+    transform:rotateY(180deg);
+    font-size:12.5px; color:var(--text-dim);
+  }
+
+  footer{
+    text-align:center; padding:40px 24px 60px;
+    color:var(--text-dimmer); font-size:12px;
+    font-family:'JetBrains Mono',monospace;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">⚡ POT.MEMBRANA</span>
+  <a class="pill" href="#celulas">01 Excitables</a>
+  <a class="pill" href="#gradientes">02 Gradientes</a>
+  <a class="pill" href="#reposo">03 Reposo</a>
+  <a class="pill" href="#accion">04 Pot. Acción</a>
+  <a class="pill" href="#propagacion">05 Propagación</a>
+  <a class="pill" href="#sinapsis">06 Sinapsis</a>
+  <a class="pill" href="#clinica">07 Aplicación</a>
+</nav>
+
+<div class="hero">
+  <div class="eyebrow">Fisiología · Clase 23</div>
+  <h1>Regulación de los <span>potenciales</span> de membrana plasmática</h1>
+  <p class="sub">Guía interactiva para repasar cómo las células excitables generan, propagan y regulan su señal eléctrica — desde el reposo hasta la sinapsis.</p>
+
+  <div class="trace-wrap">
+    <svg id="heroTrace" viewBox="0 0 600 180" preserveAspectRatio="none">
+      <line x1="0" y1="120" x2="600" y2="120" stroke="rgba(220,232,240,0.08)" stroke-width="1"/>
+      <path id="heroPath" d="M0,120 L180,120 C220,120 230,20 260,20 C285,20 290,150 320,150 C360,150 380,120 600,120"/>
+    </svg>
+    <div class="readout">
+      <span>-70 mV reposo</span>
+      <span>+35 mV pico</span>
+      <span>-90 mV hiperpolarización</span>
+    </div>
+  </div>
+</div>
+
+<!-- 01 CÉLULAS EXCITABLES -->
+<section id="celulas">
+  <div class="kicker"><span class="num">1</span><div><h2>Células excitables</h2><p>Quiénes generan y propagan señales eléctricas</p></div></div>
+  <p style="color:var(--text-dim); font-size:14px; max-width:640px; margin-bottom:22px;">
+    Poseen canales iónicos regulados por voltaje que les permiten responder de forma rápida y controlada a un estímulo.
+  </p>
+  <div class="grid3">
+    <div class="card"><span class="tag">Neuronas</span><h3>Transmisión nerviosa</h3><p>Generan y propagan potenciales de acción a lo largo del axón hasta las terminales sinápticas.</p></div>
+    <div class="card"><span class="tag">Células musculares</span><h3>Contracción</h3><p>Convierten el potencial eléctrico en acoplamiento excitación-contracción.</p></div>
+    <div class="card"><span class="tag">Células endocrinas</span><h3>Secreción hormonal</h3><p>Ej. célula β pancreática: la despolarización desencadena exocitosis de insulina.</p></div>
+  </div>
+  <p style="margin-top:14px; font-size:12.5px; color:var(--text-dimmer);">💡 Para explicar: parte preguntando qué tienen en común estas tres células antes de dar la respuesta — llegan solos a "canales dependientes de voltaje".</p>
+</section>
+
+<!-- 02 GRADIENTES -->
+<section id="gradientes">
+  <div class="kicker"><span class="num">2</span><div><h2>Gradientes iónicos</h2><p>La base física de todo potencial de membrana</p></div></div>
+
+  <div class="ion-labels"><span>Ion</span><span>Extracelular (mM)</span><span>Intracelular (mM)</span></div>
+  <div id="ionTable"></div>
+
+  <p style="margin-top:16px; font-size:12.5px; color:var(--text-dimmer);">💡 Truco mnemotécnico: "Na⁺ y Ca²⁺ se quedan afuera, K⁺ se queda adentro" — Cl⁻ es el único aniónico relevante y también está más concentrado afuera.</p>
+</section>
+
+<!-- 03 REPOSO -->
+<section id="reposo">
+  <div class="kicker"><span class="num">3</span><div><h2>Potencial de reposo</h2><p>≈ −70 mV, sostenido por tres mecanismos</p></div></div>
+  <div class="grid3">
+    <div class="card"><span class="tag">Factor 1</span><h3>Distribución desigual</h3><p>K⁺, Na⁺ y Cl⁻ no están repartidos igual a ambos lados de la membrana.</p></div>
+    <div class="card"><span class="tag">Factor 2</span><h3>Permeabilidad selectiva</h3><p>La membrana es más permeable al K⁺ gracias a los canales de fuga.</p></div>
+    <div class="card"><span class="tag">Factor 3</span><h3>Bomba Na⁺/K⁺-ATPasa</h3><p>Saca 3 Na⁺ e ingresa 2 K⁺ por ciclo, usando ATP — contribuye a la negatividad interna.</p></div>
+  </div>
+</section>
+
+<!-- 04 POTENCIAL DE ACCIÓN — INTERACTIVE -->
+<section id="accion">
+  <div class="kicker"><span class="num">4</span><div><h2>Potencial de acción</h2><p>Arrastra el control para recorrer las 4 fases</p></div></div>
+
+  <div class="ap-explorer">
+    <div class="ap-graph-wrap">
+      <svg id="apSvg" viewBox="0 0 600 220" preserveAspectRatio="none">
+        <line x1="0" y1="150" x2="600" y2="150" stroke="rgba(220,232,240,0.10)" stroke-dasharray="4 4"/>
+        <text x="6" y="145" fill="#4f6579" font-size="10" font-family="JetBrains Mono">-70</text>
+        <line x1="0" y1="112" x2="600" y2="112" stroke="rgba(232,93,156,0.35)" stroke-dasharray="2 4"/>
+        <text x="6" y="108" fill="#e85d9c" font-size="10" font-family="JetBrains Mono">-55 umbral</text>
+        <path id="apPath" d="M0,150 L160,150 C185,150 190,150 205,148 C230,145 235,40 260,40 C280,40 275,182 300,190 C330,198 360,158 400,152 C450,146 500,150 600,150"/>
+        <circle id="apMarker" cx="0" cy="150" r="6"/>
+      </svg>
+    </div>
+    <div class="ap-controls">
+      <input type="range" id="apSlider" min="0" max="1000" value="0">
+    </div>
+
+    <div class="ap-phase-label" id="apPhaseLabel">Fase 1</div>
+    <div class="ap-phase-title" id="apPhaseTitle">Reposo</div>
+    <div class="voltage-readout" id="apVoltage">−70 mV</div>
+    <div class="ap-phase-desc" id="apPhaseDesc">Salida constante de K⁺ por canales de fuga, entrada limitada de Na⁺. Los canales dependientes de voltaje permanecen cerrados.</div>
+
+    <div class="channel-row">
+      <div class="channel-chip" id="chipNa"><span class="channel-dot" style="background:var(--na)"></span><span id="chipNaText">Na⁺: cerrado</span></div>
+      <div class="channel-chip" id="chipK"><span class="channel-dot" style="background:var(--k)"></span><span id="chipKText">K⁺: cerrado</span></div>
+    </div>
+
+    <div class="todo-nada">⚡ <strong>Ley de todo o nada:</strong> si el estímulo lleva el potencial al umbral de −55 mV, se dispara el potencial de acción completo. Si no lo alcanza, no hay respuesta — sin términos medios.</div>
+  </div>
+
+  <p style="margin-top:16px; font-size:12.5px; color:var(--text-dimmer);">💡 Para taller: pide a los estudiantes mover el control y detenerse justo antes del pico — ¿qué canal predomina en ese punto?</p>
+</section>
+
+<!-- 05 PROPAGACIÓN -->
+<section id="propagacion">
+  <div class="kicker"><span class="num">5</span><div><h2>Propagación</h2><p>Unidireccional, y más rápida con mielina</p></div></div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <p style="font-size:13px;">Detrás del punto activo, los canales de Na⁺ quedan <strong style="color:var(--na)">inactivados</strong> (período refractario) — por eso el potencial de acción no puede devolverse, solo avanzar.</p>
+  </div>
+
+  <div class="race-label">Axón sin mielina — conducción continua</div>
+  <div class="race-track" id="trackUnmyelinated">
+    <div class="race-dot" id="dotUnmyelinated"></div>
+  </div>
+
+  <div class="race-label">Axón mielinizado — conducción saltatoria (nodos de Ranvier)</div>
+  <div class="race-track" id="trackMyelinated"></div>
+
+  <div style="margin-top:18px; display:flex; align-items:center;">
+    <button class="run-btn" id="raceBtn">▶ Simular conducción</button>
+    <span class="race-time" id="raceTime"></span>
+  </div>
+
+  <div class="grid2" style="margin-top:24px;">
+    <div class="card"><span class="tag">Factor A</span><h3>Vaina de mielina</h3><p>El impulso "salta" entre nodos de Ranvier en vez de propagarse punto a punto — mucho más rápido.</p></div>
+    <div class="card"><span class="tag">Factor B</span><h3>Diámetro del axón</h3><p>A mayor diámetro, menor resistencia interna → mayor velocidad. Fibras Aα (12–20 μm) conducen a 70–120 m/s; fibras C (0.4–1.2 μm) a solo 0.5–2 m/s.</p></div>
+  </div>
+</section>
+
+<!-- 06 SINAPSIS -->
+<section id="sinapsis">
+  <div class="kicker"><span class="num">6</span><div><h2>Sinapsis y neurotransmisión</h2><p>Del potencial de acción a la señal química</p></div></div>
+
+  <div id="accordion"></div>
+
+  <div class="grid2" style="margin-top:24px;">
+    <div class="card"><span class="tag">Receptor ionotrópico</span><h3>Rápido</h3><p>El receptor y el canal iónico son la misma proteína. Respuesta en milisegundos.</p></div>
+    <div class="card"><span class="tag">Receptor metabotrópico</span><h3>Lento, amplificado</h3><p>Activa proteína G y mensajeros intracelulares que modulan canales de forma indirecta.</p></div>
+  </div>
+
+  <div class="card" style="margin-top:14px; border-left:3px solid var(--cl); border-radius:0 var(--radius) var(--radius) 0;">
+    <h3>Sinapsis inhibitoria por GABA</h3>
+    <p>El GABA abre canales de Cl⁻ o K⁺: entra Cl⁻ o sale K⁺, el interior se vuelve más negativo (hiperpolarización) y cuesta más disparar un potencial de acción. Anestésicos, alcohol y barbitúricos imitan este efecto, deprimiendo la actividad del SNC.</p>
+  </div>
+</section>
+
+<!-- 07 CLÍNICA -->
+<section id="clinica">
+  <div class="kicker"><span class="num">7</span><div><h2>Aplicación clínica</h2><p>Toca las tarjetas para revisar</p></div></div>
+
+  <div class="flip-grid" id="flipGrid"></div>
+</section>
+
+<footer>
+  Prof. Sebastián Araya D. — Fisiología · Basado en Clase 23: Regulación de los potenciales de membrana plasmática
+</footer>
+
+<script>
+// ---------- Ion table ----------
+const ions = [
+  {name:'Na⁺', ext:145, intr:15, color:'#f2a65a', max:150},
+  {name:'K⁺',  ext:5,   intr:140, color:'#4fd1c5', max:150},
+  {name:'Cl⁻', ext:110, intr:4,  color:'#8bd17c', max:150},
+  {name:'Ca²⁺',ext:2,   intr:0.0001, color:'#e85d9c', max:150},
+];
+const ionTable = document.getElementById('ionTable');
+ions.forEach(ion=>{
+  const row = document.createElement('div');
+  row.className='ion-row';
+  const extPct = Math.max((ion.ext/ion.max)*100, 4);
+  const intrPct = Math.max((ion.intr/ion.max)*100, 2);
+  row.innerHTML = `
+    <span class="ion-name" style="color:${ion.color}">${ion.name}</span>
+    <div class="bar-track"><div class="bar-fill" style="width:${extPct}%; background:${ion.color}">${ion.ext} mM</div></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${intrPct}%; background:${ion.color}">${ion.intr} mM</div></div>
+  `;
+  ionTable.appendChild(row);
+});
+
+// ---------- AP explorer ----------
+const apPath = document.getElementById('apPath');
+const apMarker = document.getElementById('apMarker');
+const apSlider = document.getElementById('apSlider');
+const apLen = apPath.getTotalLength();
+
+const phaseData = [
+  {max:150, label:'Fase 1', title:'Reposo', v:'−70 mV',
+   desc:'Salida constante de K⁺ por canales de fuga, entrada limitada de Na⁺. Los canales dependientes de voltaje permanecen cerrados.',
+   na:'cerrado', k:'cerrado', naColor:'var(--text-dimmer)', kColor:'var(--text-dimmer)'},
+  {max:430, label:'Fase 2', title:'Despolarización', v:'+35 mV',
+   desc:'Un estímulo umbral abre los canales de Na⁺ dependientes de voltaje. El Na⁺ entra rápidamente y el interior se vuelve positivo.',
+   na:'abierto', k:'cerrado', naColor:'var(--na)', kColor:'var(--text-dimmer)'},
+  {max:700, label:'Fase 3', title:'Repolarización', v:'−55 mV → −70 mV',
+   desc:'Los canales de Na⁺ se inactivan y los de K⁺ se abren. El K⁺ sale, restaurando la negatividad.',
+   na:'inactivado', k:'abierto', naColor:'var(--ca)', kColor:'var(--k)'},
+  {max:1000, label:'Fase 4', title:'Hiperpolarización', v:'−90 mV → −70 mV',
+   desc:'Los canales de K⁺ se cierran lentamente, generando un potencial más negativo que el de reposo. La bomba Na⁺/K⁺ restaura los gradientes.',
+   na:'cerrado', k:'cerrando', naColor:'var(--text-dimmer)', kColor:'var(--k)'},
+];
+
+function updateAP(val){
+  const pct = val/1000;
+  const pt = apPath.getPointAtLength(pct*apLen);
+  apMarker.setAttribute('cx', pt.x);
+  apMarker.setAttribute('cy', pt.y);
+
+  let phase = phaseData[0];
+  for(const p of phaseData){ if(val <= p.max){ phase = p; break; } }
+
+  document.getElementById('apPhaseLabel').textContent = phase.label;
+  document.getElementById('apPhaseTitle').textContent = phase.title;
+  document.getElementById('apVoltage').textContent = phase.v;
+  document.getElementById('apPhaseDesc').textContent = phase.desc;
+  document.getElementById('chipNaText').textContent = 'Na⁺: ' + phase.na;
+  document.getElementById('chipKText').textContent = 'K⁺: ' + phase.k;
+  document.getElementById('chipNa').style.borderColor = phase.naColor;
+  document.getElementById('chipK').style.borderColor = phase.kColor;
+}
+apSlider.addEventListener('input', e=>updateAP(+e.target.value));
+updateAP(0);
+
+// ---------- Myelin race ----------
+const raceBtn = document.getElementById('raceBtn');
+const dotUn = document.getElementById('dotUnmyelinated');
+const trackMy = document.getElementById('trackMyelinated');
+const raceTime = document.getElementById('raceTime');
+
+// build nodes + myelinated dot
+const numNodes = 6;
+let myDot = document.createElement('div');
+myDot.className='race-dot';
+myDot.style.background = 'var(--k)';
+myDot.style.boxShadow = '0 0 8px var(--k)';
+trackMy.appendChild(myDot);
+for(let i=1;i<numNodes;i++){
+  const n = document.createElement('div');
+  n.className='node';
+  n.style.left = (i*(100/numNodes))+'%';
+  trackMy.appendChild(n);
+}
+
+let racing = false;
+raceBtn.addEventListener('click', ()=>{
+  if(racing) return;
+  racing = true;
+  raceBtn.textContent = '⏳ Simulando…';
+  dotUn.style.transition = 'none';
+  myDot.style.transition = 'none';
+  dotUn.style.left='0%';
+  myDot.style.left='0%';
+  void dotUn.offsetWidth;
+
+  // unmyelinated: slow continuous
+  dotUn.style.transition = 'left 3.4s linear';
+  requestAnimationFrame(()=>{ dotUn.style.left='96%'; });
+
+  // myelinated: fast saltatory jumps
+  let step = 0;
+  const jumpTime = 320;
+  function jump(){
+    step++;
+    myDot.style.transition = `left ${jumpTime*0.5}ms ease-in-out`;
+    myDot.style.left = (step*(100/numNodes))+'%';
+    if(step < numNodes){ setTimeout(jump, jumpTime); }
+  }
+  setTimeout(jump, 150);
+
+  raceTime.textContent = 'Mielinizado ≈ 3× más rápido que el axón amielínico';
+  setTimeout(()=>{ racing=false; raceBtn.textContent='▶ Simular conducción'; }, 3600);
+});
+
+// ---------- Synapse accordion ----------
+const synapseSteps = [
+  {title:'1 — Llegada del potencial de acción', items:[
+    'Los neurotransmisores están sintetizados y almacenados en vesículas.',
+    'El potencial de acción invade el botón presináptico.',
+    'Se abren los canales de Ca²⁺ dependientes de voltaje.',
+    'Ingresa Ca²⁺ al botón sináptico.'
+  ]},
+  {title:'2 — Liberación del neurotransmisor', items:[
+    'El Ca²⁺ provoca la fusión de la vesícula con la membrana presináptica.',
+    'El neurotransmisor se libera al espacio sináptico por exocitosis.'
+  ]},
+  {title:'3 — Efecto postsináptico y reciclaje', items:[
+    'El neurotransmisor se une a receptores postsinápticos.',
+    'Se abren los canales postsinápticos.',
+    'La corriente genera un PPSE o PPSI que cambia la excitabilidad de la neurona postsináptica.',
+    'La neuroglía remueve o degrada el neurotransmisor.',
+    'Las vesículas se reciclan desde la membrana presináptica.'
+  ]},
+];
+const accordion = document.getElementById('accordion');
+synapseSteps.forEach((s,i)=>{
+  const item = document.createElement('div');
+  item.className='accordion-item' + (i===0?' open':'');
+  item.innerHTML = `
+    <div class="accordion-head">
+      <h4>${s.title}</h4>
+      <span class="plus">+</span>
+    </div>
+    <div class="accordion-body">
+      <ol>${s.items.map(it=>`<li>${it}</li>`).join('')}</ol>
+    </div>
+  `;
+  const head = item.querySelector('.accordion-head');
+  const body = item.querySelector('.accordion-body');
+  head.addEventListener('click', ()=>{
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.accordion-item').forEach(el=>{
+      el.classList.remove('open');
+      el.querySelector('.accordion-body').style.maxHeight = null;
+    });
+    if(!isOpen){
+      item.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+  accordion.appendChild(item);
+});
+// open first by default
+setTimeout(()=>{
+  const first = document.querySelector('.accordion-item.open .accordion-body');
+  if(first) first.style.maxHeight = first.scrollHeight + 'px';
+}, 50);
+
+// ---------- Flip cards ----------
+const flashcards = [
+  {q:'Célula β pancreática', front:'¿Qué dispara la liberación de insulina?', back:'Glucosa → ↑ATP/ADP → cierre de KATP → despolarización → apertura de canales de Ca²⁺ → exocitosis de insulina.'},
+  {q:'GABA', front:'¿Cómo inhibe una neurona?', back:'Abre canales de Cl⁻ o K⁺, hiperpolarizando la célula y dificultando que alcance el umbral de disparo.'},
+  {q:'Dopamina', front:'¿Es el neurotransmisor del "placer"?', back:'No. La dopamina está más asociada a la anticipación y motivación, no al placer en sí mismo.'},
+  {q:'Drogas y adicción', front:'¿Qué vía dopaminérgica modifican?', back:'La proyección del área tegmental ventral (VTA) al núcleo accumbens, generando sensibilización, tolerancia y riesgo de recaída.'},
+];
+const flipGrid = document.getElementById('flipGrid');
+flashcards.forEach(c=>{
+  const card = document.createElement('div');
+  card.className='flip-card';
+  card.innerHTML = `
+    <div class="flip-inner">
+      <div class="flip-face flip-front">
+        <span class="q">${c.q}</span>
+        <h3>${c.front}</h3>
+      </div>
+      <div class="flip-face flip-back">${c.back}</div>
+    </div>
+  `;
+  card.addEventListener('click', ()=> card.classList.toggle('flipped'));
+  flipGrid.appendChild(card);
+});
+</script>
+</body>
+</html>
